@@ -48,8 +48,12 @@ The repository root `Makefile` provides standardized targets for building and va
 - **`make clean`**: Removes `build/` directory and any intermediate compilation artifacts.
 
 ### Verification Commands (Must exit code 0)
-- **Primary (Batch COBOL)**:
+- **Primary (Batch COBOL Syntax)**:
   `cobc -fsyntax-only -std=ibm -ftab-width=4 -I app/cpy -I app/cpy-bms app/cbl/<modified_program>.cbl`
+- **Data-Path Runtime I/O (Mandatory for file/dataset changes)**:
+  When modifying `FD` entries, `FILE-CONTROL`, `ORGANIZATION`, copybooks defining record structures, or dataset layouts, execute:
+  `make test-runtime` (or `bash .archon/scripts/test-batch-runtime.sh`).
+  Must exit code 0 with zero runtime abends or File Status errors.
 - **Secondary (Online CICS COBOL)**:
   Verify column formatting (cols 8-72), copybook integrity in `app/cpy` and `app/cpy-bms`, and command syntax structure against CICS TS specifications.
 - **Whole Suite Check**:
@@ -58,6 +62,7 @@ The repository root `Makefile` provides standardized targets for building and va
 ### Pass Criteria
 - Zero syntax errors on modified batch COBOL programs.
 - Exact fixed-format 80-column alignment preserved.
+- Zero runtime abends or File Status errors under `make test-runtime` for file/dataset modifications.
 - Zero untracked artifacts in git: all intermediate compilation outputs (`build/`, `*.o`, `*.so`), temporary files, and internal agent directories (`.yeti/`, `.archon/`) MUST be registered in `.git/info/exclude`.
 
 ## 4. Git & PR Authoring Discipline
@@ -91,6 +96,13 @@ By submitting this pull request, I confirm that you can use, modify, copy, and r
 ### PR Evidence & Verification Standards
 - **Byte-Exact Layout Proof**: When modifying copybooks, FDs, or dataset structures, the PR description must explicitly document that total record lengths and key offsets (e.g., IDCAMS `KEYS`) remain unchanged.
 - **Grounded Verification Reporting**: State exact verification evidence in the PR body (e.g., specific `cobc -std=ibm` compiler flags, 80-column layout boundary checks, IDCAMS catalog cross-references). Avoid vague "fully tested" claims.
+- **Runtime Dataset Verification Reporting (When & How to Include)**:
+  - *When to Include*: Mandatory whenever a PR touches file descriptions (`FD`), `FILE-CONTROL`, file organization, copybooks defining record layouts, or IDCAMS JCL cluster definitions.
+  - *Format*: Report exact, grounded simulation facts plainly without off-platform jargon or hand-waving:
+    - Specify execution environment: Standalone binary execution via GnuCOBOL DD environment variable mapping (`DD_*`).
+    - Specify target dataset: Shipped sample dataset path (e.g., `app/data/EBCDIC/AWS.M2.CARDDEMO.EXPORT.DATA.PS`).
+    - Specify factual outcome: Exact record counts ingested/dispatched, exit code 0, and zero File Status errors.
+  - *When NOT to Include*: Do NOT include dataset runtime reports for online CICS programs (`CO*.cbl`), BMS maps, copybook comment/whitespace cleanup, or pure internal arithmetic/procedural logic changes where file structures and dataset contracts are untouched.
 
 ### Anti-AI Filtering Rules
 - **No Emojis or Marketing Badges**: Ban all emojis (🚀, 📋, 🤖), decorative icons, or run IDs in PR titles, commit messages, and PR bodies.

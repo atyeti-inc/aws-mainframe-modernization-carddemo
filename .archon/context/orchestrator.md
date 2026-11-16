@@ -25,3 +25,24 @@
 - **Language & Runtime Refusals**:
   - Reject all blanket rewrites to Java, Node, Python, Spring Boot, or modern web frameworks.
   - Strictly preserve IBM 80-column fixed layout, dataset integrity, and original mainframe runtime semantics.
+
+## 4. Mainframe Systems Investigation & Root Cause Protocol
+
+### Contract Authority Hierarchy
+Declarative infrastructure (JCL, IDCAMS, DDL, CSD) and schema definitions are higher-order authorities than raw repository seed files (`.PS`) or local runner harnesses. When components disagree, subordinate artifacts must be reconciled to the infrastructure contract—never degrade the system contract to fit local test mocks.
+
+### The Mainframe Triangulation Mandate (COBOL ↔ JCL ↔ Dataset)
+Mainframe programs cannot be diagnosed by inspecting COBOL source in isolation. Every investigation touching files, datasets, or compilation errors MUST triangulate across all three surfaces before forming a hypothesis:
+1. **COBOL Definition**: `SELECT ... ORGANIZATION`, `ACCESS MODE`, `RECORD KEY`, and `FD` record descriptions.
+2. **JCL & IDCAMS Catalog**: The job stream (`app/jcl/<name>.jcl`), IDCAMS `DEFINE CLUSTER` parameters (`INDEXED`, `KEYS(len, offset)`, `RECORDSIZE`), and all allocated DD statements.
+3. **Dataset Topology**: How the dataset is structured on disk vs. how seed data is staged.
+
+### The Mainframe Repository Seed Rule (.PS vs. VSAM)
+- Git cannot store native mainframe VSAM clusters (which consist of dual data/index components and VTOC metadata).
+- ALL raw test datasets in `app/data/EBCDIC/` are distributed as Physical Sequential (`.PS`) flat files.
+- On z/OS, IDCAMS `REPRO` unpacks `.PS` sequential files into indexed VSAM (`.KSDS`) clusters defined by JCL.
+- **NEVER** infer that a COBOL program's `ORGANIZATION` should be `SEQUENTIAL` simply because the repository data file has a `.PS` extension. Always verify the IDCAMS cluster definition in JCL.
+
+### Anti-Symptom-Treating Invariant (No Feature-Stripping)
+When a compiler or preprocessor complains about an indexed key (e.g., `'KEY-NAME' is not defined`), assistants MUST NOT "fix" the error by removing `ORGANIZATION IS INDEXED` and demoting the file to `SEQUENTIAL`. Assistants must locate the structural error (e.g., key declared in `WORKING-STORAGE` instead of within the `FD` record description).
+

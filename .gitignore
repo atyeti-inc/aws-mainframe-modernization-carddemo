@@ -1,3 +1,4 @@
+# CardDemo application ignored artifacts
 mock-data-generator/node_modules/*
 sample/*
 .vscode/*
@@ -6,3 +7,19 @@ batch-app/markers/*
 /.idea/
 .DS_Store
 **/.DS_Store
+
+# Build artifacts & binaries
+build/
+bin/
+*.o
+*.so
+*.dylib
+*.dll
+*.gnt
+*.int
+
+# Listings & temporary test rubble
+*.lst
+*.listing
+*.tmp
+test.txt

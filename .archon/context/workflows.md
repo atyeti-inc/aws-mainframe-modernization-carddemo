@@ -42,6 +42,17 @@ All COBOL source must preserve standard IBM 80-column fixed format. Never introd
   - Characteristics: Contain native `EXEC CICS` commands (`SEND`, `RECEIVE`, `RETURN`, `XCTL`), referencing CICS copybooks (`DFH*`) and runtime structures (`EIBCALEN`, `EIBAID`).
   - Compilation: Requires IBM CICS preprocessor/translator; not compilable standalone with local `cobc`.
 
+### Mainframe Dataset & JCL Parity Invariant
+- **Three-Way Contract Verification**: Whenever modifying or diagnosing an `FD`, `SELECT`, or record layout:
+  1. Verify every `ASSIGN TO <DDNAME>` in COBOL against every `//<DDNAME> DD` statement in the corresponding JCL. Flag missing DD statements immediately (e.g., programs opening files without matching JCL DD entries).
+  2. For `INDEXED` files, cross-check IDCAMS `KEYS(length offset)` in JCL against the COBOL `FD` record layout. Remember: **IDCAMS key offsets are 0-indexed** (byte position $N$ is offset $N-1$).
+  3. Ensure the primary `RECORD KEY` field is declared **directly inside the record description under the `FD` in the `FILE SECTION`**, never exclusively in `WORKING-STORAGE SECTION`.
+
+### Runtime Dataset Testing & ISAM Simulation
+- When running local GnuCOBOL runtime simulations (`make test-runtime`):
+  - Do NOT mutate COBOL source organization to make sequential flat-file mocks pass.
+  - If a program expects an indexed VSAM dataset and the local environment only provides a raw `.PS` sequential file, build an ISAM indexed fixture or provide a proper loader step matching IDCAMS `REPRO` behavior. The benchmark source code is frozen to mainframe semantics.
+
 ## 3. Toolchain & Verification Contract
 
 ### Dialect & Compiler Flags

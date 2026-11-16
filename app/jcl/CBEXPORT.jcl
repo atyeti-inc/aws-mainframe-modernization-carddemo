@@ -19,23 +19,13 @@
 //* EXPORT CUSTOMER DATA FROM VSAM FILES TO MULTI-RECORD EXPORT FILE
 //* FOR BRANCH MIGRATION OR DATA TRANSFER PURPOSES
 //* *******************************************************************
-//* STEP 1: DEFINE VSAM CLUSTER FOR EXPORT FILE
+//* STEP 1: DELETE EXISTING EXPORT FILE IF PRESENT
 //* *******************************************************************
 //STEP01   EXEC PGM=IDCAMS
 //SYSPRINT DD SYSOUT=*
 //SYSIN    DD *
-  DELETE AWS.M2.CARDDEMO.EXPORT.DATA CLUSTER PURGE
+  DELETE AWS.M2.CARDDEMO.EXPORT.DATA PURGE
   SET MAXCC = 0
-  
-  DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.EXPORT.DATA) -
-                  INDEXED -
-                  KEYS(4 28) -
-                  RECORDSIZE(500 500) -
-                  CYLINDERS(10 5) -
-                  FREESPACE(10 10) -
-                  SHAREOPTIONS(2 3)) -
-         DATA (NAME(AWS.M2.CARDDEMO.EXPORT.DATA.DATA)) -
-         INDEX (NAME(AWS.M2.CARDDEMO.EXPORT.DATA.INDEX))
 /*
 //* *******************************************************************
 //* STEP 2: RUN EXPORT PROGRAM
@@ -57,10 +47,13 @@
 //CARDFILE DD DISP=SHR,
 //         DSN=AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
 //*
-//* OUTPUT EXPORT VSAM FILE
+//* OUTPUT EXPORT FILE
 //*
-//EXPFILE  DD DISP=SHR,
-//         DSN=AWS.M2.CARDDEMO.EXPORT.DATA
+//EXPFILE  DD DISP=(NEW,CATLG,DELETE),
+//         DSN=AWS.M2.CARDDEMO.EXPORT.DATA,
+//         UNIT=SYSDA,
+//         SPACE=(CYL,(10,5),RLSE),
+//         DCB=(RECFM=FB,LRECL=500,BLKSIZE=0)
 //*
 //* SYSTEM OUTPUT
 //*

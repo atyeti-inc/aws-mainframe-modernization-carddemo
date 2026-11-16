@@ -22,6 +22,9 @@
 - **Benchmark Corpus Preservation**:
   - Archaic legacy idioms (`ALTER/GO TO`, complex `REDEFINES`, unusual control flow) are deliberate migration test fixtures. Refuse refactoring working legacy code.
   - Work is strictly limited to resolving verified compile/runtime blockers or explicitly scoped benchmark enhancements.
+- **Defect Classification Invariant (Compile Blockers vs. Runtime Test Surface)**:
+  - **Compile Blocker (Must Fix)**: If a COBOL module has syntax errors (like `RECORD KEY` missing from the `FD`), modernization toolchains (AWS Blu Age, Micro Focus) fail at Step 0. The parser aborts, no AST or Java/Spring code can be generated, and the benchmark cannot even be run. This is what Issue 36 reported (`CBEXPORT & CBIMPORT wont compile`). Resolving verified compile blockers is mandatory.
+  - **Runtime Degradation & JCL Quirks (Intended Test Surface — Do Not "Fix")**: Missing DD statements (e.g., `//CARDOUT DD`), subtle IDCAMS offset mismatches, unhandled condition codes, and abnormal exit paths are deliberate stress tests. Modernization engines are explicitly benchmarked on how their analyzers, catalogs, and runtime emulators diagnose or handle imperfect, real-world mainframe jobs (e.g., graceful JCL error handling, dynamic allocation fallbacks, dataset catalog resolution). Autonomous workflows and assistants MUST NOT expand a compilation fix to unilaterally "repair" or normalize JCL quirks, catalog offsets, or runtime anomalies unless explicitly commissioned by an AWS-posted issue.
 - **Language & Runtime Refusals**:
   - Reject all blanket rewrites to Java, Node, Python, Spring Boot, or modern web frameworks.
   - Strictly preserve IBM 80-column fixed layout, dataset integrity, and original mainframe runtime semantics.

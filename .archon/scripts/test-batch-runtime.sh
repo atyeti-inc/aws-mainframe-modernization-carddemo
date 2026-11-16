@@ -29,7 +29,63 @@ if [ -f "$REPO_ROOT/app/cbl/CBIMPORT.cbl" ] && [ -f "$DATA_DIR/AWS.M2.CARDDEMO.E
     TMP_OUT="$(mktemp -d /tmp/carddemo-test-XXXXXX)"
     trap 'rm -rf "$TMP_OUT"' EXIT
     
-    export DD_EXPFILE="$DATA_DIR/AWS.M2.CARDDEMO.EXPORT.DATA.PS"
+    # Compile and run a helper to stage sequential EXPORT.DATA.PS into an indexed file (simulating IDCAMS REPRO)
+    cat << 'EOF' > "$TMP_OUT/stage_export.cbl"
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. STGEXP.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT SEQ-INPUT ASSIGN TO SEQIN
+               ORGANIZATION IS RECORD SEQUENTIAL
+               FILE STATUS IS WS-SEQ-STATUS.
+           SELECT IDX-OUTPUT ASSIGN TO IDXOUT
+               ORGANIZATION IS INDEXED
+               ACCESS MODE IS SEQUENTIAL
+               RECORD KEY IS EXPORT-SEQUENCE-NUM
+               FILE STATUS IS WS-IDX-STATUS.
+       DATA DIVISION.
+       FILE SECTION.
+       FD  SEQ-INPUT
+           RECORDING MODE IS F
+           RECORD CONTAINS 500 CHARACTERS.
+       01  SEQ-RECORD PIC X(500).
+       FD  IDX-OUTPUT.
+       COPY CVEXPORT.
+       WORKING-STORAGE SECTION.
+       01  WS-STATUS.
+           05 WS-SEQ-STATUS PIC X(2).
+           05 WS-IDX-STATUS PIC X(2).
+       PROCEDURE DIVISION.
+       0000-MAIN.
+           OPEN INPUT SEQ-INPUT
+           OPEN OUTPUT IDX-OUTPUT
+           PERFORM UNTIL WS-SEQ-STATUS = '10'
+               READ SEQ-INPUT INTO EXPORT-RECORD
+               IF WS-SEQ-STATUS = '00'
+                   WRITE EXPORT-RECORD
+               END-IF
+           END-PERFORM
+           CLOSE SEQ-INPUT
+           CLOSE IDX-OUTPUT
+           STOP RUN.
+EOF
+
+    if ! $COBC -x $COBFLAGS $INCLUDES "$TMP_OUT/stage_export.cbl" -o "$TMP_OUT/STGEXP" 2>/dev/null; then
+        echo "[FAILED]"
+        echo "Failed to compile dataset staging helper." >&2
+        exit 1
+    fi
+
+    export DD_SEQIN="$DATA_DIR/AWS.M2.CARDDEMO.EXPORT.DATA.PS"
+    export DD_IDXOUT="$TMP_OUT/EXPORT.INDEXED.dat"
+    if ! "$TMP_OUT/STGEXP" 2>/dev/null; then
+        echo "[FAILED]"
+        echo "Failed to stage sequential export dataset into indexed format." >&2
+        exit 1
+    fi
+
+    export DD_EXPFILE="$TMP_OUT/EXPORT.INDEXED.dat"
     export DD_CUSTOUT="$TMP_OUT/CUSTOUT.dat"
     export DD_ACCTOUT="$TMP_OUT/ACCTOUT.dat"
     export DD_XREFOUT="$TMP_OUT/XREFOUT.dat"

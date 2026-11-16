@@ -86,6 +86,11 @@ By submitting this pull request, I confirm that you can use, modify, copy, and r
 - **IBM Fixed Layout Invariant**: Maintain strict 80-column fixed layout (Cols 1–6 sequence, Col 7 indicator, Cols 8–11 Area A, Cols 12–72 Area B). Never introduce tabs or free-form lines.
 - **Surgical Scoping**: Zero gratuitous reformatting, cosmetic realignment, or whitespace churn on untouched lines. Diffs must be isolated solely to functional changes.
 - **Fidelity Preservation**: Do not introduce off-target rewrites (e.g., converting COBOL/JCL to modern runtime wrappers) unless explicitly scoped.
+- **Preserve Archaic Benchmark Idioms**: Do not refactor adjacent legacy constructs (e.g., `ALTER/GO TO`, complex `REDEFINES`). They are intentional parser test fixtures for migration tools.
+
+### PR Evidence & Verification Standards
+- **Byte-Exact Layout Proof**: When modifying copybooks, FDs, or dataset structures, the PR description must explicitly document that total record lengths and key offsets (e.g., IDCAMS `KEYS`) remain unchanged.
+- **Grounded Verification Reporting**: State exact verification evidence in the PR body (e.g., specific `cobc -std=ibm` compiler flags, 80-column layout boundary checks, IDCAMS catalog cross-references). Avoid vague "fully tested" claims.
 
 ### Anti-AI Filtering Rules
 - **No Emojis or Marketing Badges**: Ban all emojis (🚀, 📋, 🤖), decorative icons, or run IDs in PR titles, commit messages, and PR bodies.

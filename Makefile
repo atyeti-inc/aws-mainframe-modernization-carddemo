@@ -46,7 +46,7 @@ BATCH_OBJS = \
 	$(BUILD_DIR)/CSUTLDTC.o \
 	$(BUILD_DIR)/COBSWAIT.o
 
-.PHONY: all check test clean help
+.PHONY: all check test test-runtime clean help
 
 all: $(BUILD_DIR) $(BATCH_OBJS)
 	@echo "All batch COBOL modules compiled successfully to $(BUILD_DIR)/."
@@ -88,14 +88,19 @@ test: check all
 	done
 	@echo "All CardDemo COBOL tests passed."
 
+# Runtime verification target: runs batch modules against EBCDIC sample datasets
+test-runtime:
+	@bash .archon/scripts/test-batch-runtime.sh
+
 clean:
 	rm -rf $(BUILD_DIR) *.o *.so *.gnt *.int *.lst *.listing *.tmp test.txt
 
 help:
 	@echo "CardDemo COBOL Suite - Targets:"
-	@echo "  make check - Run syntax verification across all batch modules"
-	@echo "  make all   - Compile all batch COBOL modules into $(BUILD_DIR)/"
-	@echo "  make test  - Run syntax check, full compile, and artifact verification"
-	@echo "  make clean - Remove build artifacts"
-	@echo "  make help  - Show this help message"
+	@echo "  make check        - Run syntax verification across all batch modules"
+	@echo "  make all          - Compile all batch COBOL modules into $(BUILD_DIR)/"
+	@echo "  make test         - Run syntax check, full compile, and artifact verification"
+	@echo "  make test-runtime - Run batch dataset runtime I/O verification against sample data"
+	@echo "  make clean        - Remove build artifacts"
+	@echo "  make help         - Show this help message"
 
